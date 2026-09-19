@@ -1,111 +1,265 @@
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Microsoft YaHei', sans-serif; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; }
 html, body { height: 100%; overflow: hidden; background: #1a1a2e; color: #fff; }
 
-/* 右侧装备栏 */
+/* ========== 选角覆盖层 ========== */
+.select-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,10,30,0.92);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.select-box {
+  width: 520px; max-width: 94vw;
+  background: #16213e; padding: 24px; border-radius: 14px;
+  border: 1px solid #2a3a5e;
+  max-height: 95vh; overflow-y: auto;
+}
+.select-box h2 { margin-bottom: 14px; color: #feca57; text-align: center; }
+.select-row { margin-bottom: 12px; }
+.select-row label { display: block; margin-bottom: 5px; color: #aaa; font-size: 13px; }
+#factionSelect {
+  width: 100%; padding: 8px; border-radius: 6px;
+  background: #0f3460; color: #fff; border: 1px solid #2a3a5e;
+}
+.char-list {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  max-height: 180px; overflow-y: auto;
+}
+.char-card {
+  background: rgba(255,255,255,0.06);
+  padding: 10px; border-radius: 6px; cursor: pointer;
+  border: 2px solid transparent; text-align: center;
+}
+.char-card:hover { background: rgba(255,255,255,0.12); }
+.char-card.selected { border-color: #feca57; }
+.char-card .cname { font-size: 15px; font-weight: bold; }
+.char-card .cdesc { font-size: 11px; color: #aaa; margin-top: 4px; }
+.select-info {
+  min-height: 30px; padding: 8px;
+  background: rgba(0,0,0,0.25); border-radius: 6px;
+  font-size: 13px; color: #48dbfb; margin-bottom: 10px;
+}
+
+/* 房间玩家列表 */
+.room-list {
+  background: rgba(0,0,0,0.25); border-radius: 8px;
+  padding: 10px; margin-bottom: 12px;
+}
+.room-list-title { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+.room-player-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 8px; border-radius: 4px; font-size: 13px;
+}
+.room-player-row.host { background: rgba(254,202,87,0.15); }
+.room-player-row .rp-name { color: #fff; }
+.room-player-row .rp-state { font-size: 12px; }
+.rp-state.ready { color: #2ecc71; }
+.rp-state.wait { color: #e74c3c; }
+.rp-state.host-tag { color: #feca57; margin-right: 6px; }
+
+.ready-row {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid #2a3a5e; padding-top: 12px;
+  gap: 8px;
+}
+#readyHint { font-size: 12px; color: #aaa; flex: 1; }
+#readyBtn {
+  padding: 8px 20px; background: #2ecc71; color: #fff;
+  border: none; border-radius: 6px; cursor: pointer; font-size: 14px;
+}
+#readyBtn.ready { background: #e74c3c; }
+#hostStartBtn {
+  padding: 8px 20px; background: #feca57; color: #000;
+  border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;
+}
+#hostStartBtn:disabled { background: #555; color: #999; cursor: not-allowed; }
+
+/* ========== 弹幕 ========== */
+.danhaku-layer {
+  position: fixed; left: 50%; top: 35%;
+  transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 50; text-align: center;
+}
+.danhaku-text {
+  font-size: 54px; font-weight: 900; color: #feca57;
+  text-shadow: 0 0 20px rgba(254,202,87,0.7), 0 4px 8px rgba(0,0,0,0.6);
+  animation: danhaku 2s ease-out forwards;
+}
+@keyframes danhaku {
+  0%   { opacity: 0; transform: scale(0.6); }
+  20%  { opacity: 1; transform: scale(1.1); }
+  40%  { transform: scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+/* ========== 右侧装备栏 ========== */
 .right-panel {
   position: fixed; right: 0; top: 0; width: 180px; height: 75vh;
-  background: #16213e; padding: 15px; border-left: 1px solid #2a3a5e;
+  background: #16213e; padding: 15px;
+  border-left: 1px solid #2a3a5e; overflow-y: auto;
 }
-.right-panel h3 { margin-bottom: 10px; font-size: 16px; color: #feca57; }
+.right-panel h3 { margin-bottom: 10px; font-size: 15px; color: #feca57; }
 .equip-slot {
   background: rgba(255,255,255,0.05);
   border-radius: 6px; padding: 8px; margin-bottom: 8px;
-  border: 1px dashed #3a4a6e;
+  border: 1px dashed #3a4a6e; font-size: 13px;
 }
 .equip-slot.has-equip { border-style: solid; border-color: #48dbfb; }
-.equip-name { font-size: 14px; margin-bottom: 4px; }
-.acc-list { padding-left: 10px; font-size: 12px; color: #aaa; }
-.acc-item { margin: 2px 0; }
+.equip-slot .ename { font-weight: bold; margin-bottom: 2px; }
+.equip-slot .edesc { color: #888; font-size: 11px; margin-bottom: 4px; }
+.acc-list { padding-left: 8px; font-size: 11px; color: #aaa; }
 
-/* 战斗区 */
+/* ========== 战斗区 ========== */
 .battle-area {
   height: 75vh; margin-right: 180px;
-  display: flex; flex-direction: column; padding: 20px;
+  display: flex; flex-direction: column; padding: 16px;
 }
-.enemy-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
-.enemy-panel { position: relative; }
-.enemy-info {
-  background: rgba(255,255,255,0.1);
-  padding: 20px 40px; border-radius: 10px; text-align: center;
-  cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+.players-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px; align-content: center;
+  overflow-y: auto;
 }
-.enemy-info.targetable { border-color: #ff6b6b; box-shadow: 0 0 15px rgba(255,107,107,0.5); }
-.enemy-name { font-size: 22px; margin-bottom: 8px; }
-.enemy-hp { font-size: 18px; color: #ff6b6b; }
-.enemy-effects { margin-top: 8px; font-size: 14px; color: #feca57; }
+.player-card {
+  background: rgba(255,255,255,0.08);
+  border: 2px solid transparent;
+  border-radius: 10px; padding: 12px;
+  text-align: center; cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+.player-card.current-turn {
+  border-color: #feca57;
+  box-shadow: 0 0 12px rgba(254,202,87,0.5);
+}
+.player-card.targetable {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 15px rgba(255,107,107,0.6);
+}
+.player-card.dead {
+  opacity: 0.35; filter: grayscale(1); cursor: not-allowed;
+}
+.pc-name { font-size: 16px; font-weight: bold; margin-bottom: 3px; }
+.pc-char { font-size: 12px; color: #aaa; margin-bottom: 5px; }
+.pc-hp { font-size: 15px; color: #ff6b6b; }
+.pc-effects { margin-top: 5px; font-size: 11px; color: #feca57; min-height: 14px; }
+.pc-minions {
+  margin-top: 6px; display: flex; gap: 4px;
+  justify-content: center; flex-wrap: wrap;
+}
+.pc-minion {
+  background: #2d3436; padding: 3px 7px; border-radius: 4px;
+  font-size: 11px; border: 1px solid transparent; cursor: pointer;
+}
+.pc-minion.targetable { border-color: #ff6b6b; }
+.pc-minion .mhp { color: #ff6b6b; }
 
-.enemy-minions, .player-minions {
-  display: flex; gap: 8px; margin-top: 10px; justify-content: center;
-}
-.minion-card {
-  background: #2d3436; padding: 6px 10px; border-radius: 6px;
-  font-size: 12px; border: 2px solid transparent; cursor: pointer;
-}
-.minion-card.targetable { border-color: #ff6b6b; }
-.minion-card .mhp { color: #ff6b6b; }
-
-/* 装备悬浮窗 */
-.equip-tooltip {
+/* 悬浮窗 */
+.player-card .equip-tooltip {
   position: absolute; left: 105%; top: 0;
-  width: 160px; background: #0f0f1e;
+  width: 200px; background: #0f0f1e;
   border: 1px solid #48dbfb; border-radius: 6px;
   padding: 10px; font-size: 12px;
-  display: none; z-index: 100;
+  display: none; z-index: 10;
+  text-align: left;
 }
-.enemy-panel:hover .equip-tooltip { display: block; }
+.player-card:hover .equip-tooltip { display: block; }
+.equip-tooltip .t-title { color: #feca57; font-weight: bold; margin-bottom: 6px; }
+.equip-tooltip .t-eq { margin-top: 6px; }
+.equip-tooltip .t-eqname { color: #48dbfb; }
+.equip-tooltip .t-edesc { color: #aaa; font-size: 11px; margin-left: 8px; }
 
+/* 日志 */
 .log-area {
-  height: 120px; overflow-y: auto;
+  height: 100px; overflow-y: auto;
   background: rgba(0,0,0,0.3); border-radius: 8px;
-  padding: 10px; margin-top: 20px;
+  padding: 10px; margin-top: 12px;
 }
-.log-area div { margin-bottom: 4px; font-size: 14px; }
+.log-area div { margin-bottom: 3px; font-size: 13px; }
 .phase-tip { color: #48dbfb; font-weight: bold; }
 
-/* 底部玩家栏 */
+/* ========== 底部 ========== */
 .player-bar {
   height: 25vh; background: #16213e;
   display: flex; align-items: center;
-  padding: 0 20px; gap: 20px;
+  padding: 0 16px; gap: 16px;
   margin-right: 180px;
 }
-.player-info { min-width: 200px; }
-.player-name { font-size: 20px; margin-bottom: 6px; }
-.player-stats span { display: block; margin-bottom: 4px; font-size: 16px; }
+.main-panel {
+  flex: 1; display: flex; align-items: center; gap: 16px; height: 100%;
+}
+.player-info { min-width: 190px; }
+.player-name { font-size: 18px; margin-bottom: 5px; }
+.player-stats span { display: block; margin-bottom: 3px; font-size: 14px; }
 .player-stats b { color: #00d2d3; }
-
-.skill-bar { display: flex; gap: 6px; margin: 8px 0; }
+.skill-bar { display: flex; gap: 5px; margin: 6px 0; flex-wrap: wrap; }
 .skill-btn {
-  padding: 6px 10px; font-size: 12px;
-  background: #5f27cd; color: #fff; border: none; border-radius: 4px;
-  cursor: pointer;
+  padding: 5px 9px; font-size: 12px;
+  background: #5f27cd; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer;
 }
 .skill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.player-effects { font-size: 13px; color: #feca57; }
+.skill-btn.selected { outline: 2px solid #feca57; }
+.player-effects { font-size: 12px; color: #feca57; }
 
 .hand-area {
-  flex: 1; display: flex; gap: 10px;
-  overflow-x: auto; padding: 10px 0;
+  flex: 1; display: flex; gap: 8px;
+  overflow-x: auto; padding: 8px 0;
 }
 .card {
-  min-width: 100px; height: 130px;
+  min-width: 95px; height: 125px;
   background: linear-gradient(135deg, #0f3460, #533483);
   border-radius: 8px; padding: 8px; cursor: pointer;
   display: flex; flex-direction: column; justify-content: space-between;
-  border: 2px solid transparent; transition: all 0.2s; flex-shrink: 0;
+  border: 2px solid transparent; transition: all 0.15s; flex-shrink: 0;
 }
-.card:hover { transform: translateY(-8px); border-color: #fff; }
-.card.selected { border-color: #feca57; box-shadow: 0 0 12px rgba(254,202,87,0.6); }
-.card-name { font-size: 15px; font-weight: bold; }
-.card-cost { font-size: 13px; color: #feca57; }
-.card-desc { font-size: 11px; opacity: 0.8; line-height: 1.3; }
+.card:hover { transform: translateY(-6px); border-color: #fff; }
+.card.selected { border-color: #feca57; box-shadow: 0 0 10px rgba(254,202,87,0.6); }
+.card-name { font-size: 14px; font-weight: bold; }
+.card-cost { font-size: 12px; color: #feca57; }
+.card-desc { font-size: 10px; opacity: 0.85; line-height: 1.3; }
 
-.turn-btns { display: flex; flex-direction: column; gap: 8px; }
 .end-btn {
-  padding: 10px 20px; font-size: 14px;
+  padding: 12px 18px; font-size: 14px;
   background: #e94560; color: #fff;
-  border: none; border-radius: 6px; cursor: pointer;
+  border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;
 }
-.end-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.end-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.minion-panel {
+  flex: 1; display: flex; align-items: center; gap: 16px; height: 100%;
+}
+.minion-info { min-width: 220px; }
+.minion-info h3 { color: #feca57; margin-bottom: 8px; }
+.my-minions { display: flex; gap: 8px; flex-wrap: wrap; }
+.target-info { color: #aaa; font-size: 13px; }
+
+/* ========== 弹窗 ========== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.modal-box {
+  background: #16213e; padding: 24px 32px;
+  border-radius: 10px; min-width: 300px;
+  text-align: center; border: 1px solid #2a3a5e;
+}
+.modal-box h3 { margin-bottom: 10px; color: #feca57; }
+.modal-box p { margin-bottom: 18px; color: #ddd; }
+.modal-btns { display: flex; gap: 10px; justify-content: center; }
+.modal-btns button, .modal-box button {
+  padding: 8px 20px; border: none; border-radius: 6px;
+  cursor: pointer; font-size: 14px;
+}
+.modal-btns .cancel { background: #555; color: #fff; }
+.modal-btns .ok, .modal-box .ok { background: #2ecc71; color: #fff; }
+.modal-overlay.big .modal-box { padding: 40px 60px; min-width: 420px; }
+.modal-overlay.big .modal-box h1 {
+  font-size: 48px; color: #feca57; margin-bottom: 24px;
+  text-shadow: 0 0 20px rgba(254,202,87,0.6);
+}
 /* （注：内容由AI生成） */

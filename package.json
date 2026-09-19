@@ -1,11 +1,14 @@
 {
-  "name": "card-battle-online",
-  "version": "1.0.0",
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2"
-  },
+  "name": "card-battle-online-v2",
+  "version": "2.0.0",
+  "description": "联机卡牌回合制对战 v2 (选角/阵营/仆从/装备/环境/弹幕/确认)",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.8.3"
   }
 }
