@@ -65,7 +65,7 @@ function newRoom() {
   return {
     id: 'room-' + Math.random().toString(36).slice(2, 8),
     players: [],
-    phase: 'select',
+    phase: 'lobby',   // lobby(大厅) → select(选角) → main/minion/env(战斗) → over
     turn: 0,
     envEffects: [],
     roundCounter: 0,
@@ -73,9 +73,9 @@ function newRoom() {
   };
 }
 function joinRoom(socket) {
-  // 找一个仍在选角阶段、还没满人的房间
+  // 找一个仍在大厅阶段、还没满人的房间
   let room = waitingRoom;
-  if (!room || room.phase !== 'select' || room.players.length >= MAX_PLAYERS) {
+  if (!room || room.phase !== 'lobby' || room.players.length >= MAX_PLAYERS) {
     room = newRoom();
     rooms[room.id] = room;
     waitingRoom = room;
@@ -279,6 +279,17 @@ io.on('connection', (socket) => {
     broadcast(r.id, 'state', snapshot(r));
   });
 
+  // 房主: 从大厅进入选角
+  socket.on('lobbyStartSelect', () => {
+    const r = rooms[socket.data.roomId];
+    if (!r || r.phase !== 'lobby') return;
+    const p = r.players[socket.data.index];
+    if (!p.isHost) return;
+    r.phase = 'select';
+    broadcastLog(r.id, '--- 进入选角阶段 ---');
+    broadcast(r.id, 'state', snapshot(r));
+  });
+
   // 房主开始游戏
   socket.on('hostStart', () => {
     const r = rooms[socket.data.roomId];
@@ -467,16 +478,16 @@ io.on('connection', (socket) => {
     startNewTurn(r.id);
   });
 
-  // 重新开始
+  // 重新开始 → 回到大厅
   socket.on('restart', () => {
     const r = rooms[socket.data.roomId];
     if (!r) return;
-    r.phase = 'select';
+    r.phase = 'lobby';
     r.players.forEach(p => { p.charId = null; p.ready = false; });
     r.envEffects = [];
     r.roundCounter = 0;
     r.winner = null;
-    broadcastLog(r.id, '--- 房间已重置, 重新选角 ---');
+    broadcastLog(r.id, '--- 回到大厅 ---');
     broadcast(r.id, 'state', snapshot(r));
   });
 
