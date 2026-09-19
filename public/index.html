@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>联机卡牌对战 v3 (多人)</title>
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+  <!-- ============ 选角/大厅覆盖层 ============ -->
+  <div class="select-overlay" id="selectOverlay">
+    <div class="select-box">
+
+      <!-- ===== 大厅阶段 (lobby) ===== -->
+      <div id="lobbyPanel">
+        <h2>🎮 游戏大厅</h2>
+        <div class="room-list">
+          <div class="room-list-title">已加入玩家 (<span id="playerCount">0</span> / <span id="maxCount">7</span>)</div>
+          <div id="lobbyPlayers"></div>
+        </div>
+        <div class="ready-row">
+          <span id="lobbyHint">等待房主开始选角…</span>
+          <button id="lobbyStartBtn" hidden>开始选角</button>
+        </div>
+      </div>
+
+      <!-- ===== 选角阶段 (select) ===== -->
+      <div id="selectPanel" hidden>
+        <h2>选择你的角色</h2>
+
+        <div class="select-row">
+          <label>阵营:</label>
+          <select id="factionSelect"></select>
+        </div>
+        <div class="select-row">
+          <label>角色:</label>
+          <div class="char-list" id="charList"></div>
+        </div>
+        <div class="select-info" id="charInfo">请选择角色</div>
+
+        <div class="room-list">
+          <div class="room-list-title">房间玩家</div>
+          <div id="roomPlayers"></div>
+        </div>
+
+        <div class="ready-row">
+          <span id="readyHint">双方选角并点准备后, 由房主开始</span>
+          <button id="readyBtn">准备</button>
+          <button id="hostStartBtn" hidden>开始游戏</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ 弹幕层 ============ -->
+  <div class="danhaku-layer" id="danhakuLayer"></div>
+
+  <!-- ============ 右侧装备栏 ============ -->
+  <aside class="right-panel">
+    <h3>我的装备</h3>
+    <div class="equip-list" id="equipList"></div>
+  </aside>
+
+  <!-- ============ 战斗主区 ============ -->
+  <main class="battle-area">
+    <section class="players-grid" id="playersGrid"></section>
+    <section class="log-area" id="logArea">
+      <div class="phase-tip" id="phaseTip">等待匹配…</div>
+    </section>
+  </main>
+
+  <!-- ============ 底部 ============ -->
+  <section class="player-bar">
+    <div class="main-panel" id="mainPanel">
+      <div class="player-info">
+        <div class="player-name" id="playerName">--</div>
+        <div class="player-stats">
+          <span>HP: <b id="playerHp">--</b>/<span id="playerMaxHp">--</span></span>
+          <span>AP: <b id="playerAp">--</b>/<span id="playerMaxAp">--</span></span>
+        </div>
+        <div class="skill-bar" id="skillBar"></div>
+        <div class="player-effects" id="playerEffects"></div>
+      </div>
+      <div class="hand-area" id="handArea"></div>
+      <button class="end-btn" id="endMainBtn">结束主回合</button>
+    </div>
+
+    <div class="minion-panel" id="minionPanel" hidden>
+      <div class="minion-info">
+        <h3>仆从行动阶段</h3>
+        <div class="my-minions" id="myMinions"></div>
+      </div>
+      <div class="target-info" id="targetInfo">选择一个仆从, 再点击其他玩家或仆从</div>
+      <button class="end-btn" id="endMinionBtn">结束仆从回合</button>
+    </div>
+  </section>
+
+  <!-- ============ 确认弹窗 ============ -->
+  <div class="modal-overlay" id="confirmModal" style="display:none">
+    <div class="modal-box">
+      <h3 id="confirmTitle">确认行动</h3>
+      <p id="confirmDesc">确定要执行吗?</p>
+      <div class="modal-btns">
+        <button class="cancel" id="confirmCancel">取消</button>
+        <button class="ok" id="confirmOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 胜利大弹窗 ============ -->
+  <div class="modal-overlay big" id="gameOverModal" style="display:none">
+    <div class="modal-box victory">
+      <h1 id="victoryText">🏆 胜利!</h1>
+      <div class="modal-btns">
+        <button class="ok" id="restartBtn">回到大厅</button>
+        <button class="cancel" id="forceCloseBtn">强制关闭</button>
+      </div>
+    </div>
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="./client.js"></script>
+</body>
+</html>
