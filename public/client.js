@@ -6,6 +6,7 @@ const socket = io();
 
 let CFG = {
   factions: [], characters: [], skills: [],
+  factionSkills: [],
   minionTemplates: [], equipments: [], accessories: []
 };
 
@@ -51,6 +52,7 @@ const targetInfo = $('targetInfo');
 
 const handArea = $('handArea');
 const endMainBtn = $('endMainBtn');
+const diceBtn = $('diceBtn');
 const endMinionBtn = $('endMinionBtn');
 const equipList = $('equipList');
 const logArea = $('logArea');
@@ -119,7 +121,21 @@ function renderCharList() {
   CFG.characters.filter(c => c.faction === fid).forEach(c => {
     const div = document.createElement('div');
     div.className = 'char-card' + (c.id === myCharId ? ' selected' : '');
-    div.innerHTML = `<div class="cname">${c.name}</div><div class="cdesc">HP${c.maxHp}/AP${c.maxAp}</div>`;
+    // 找阵营被动技能描述 (可能有多个)
+    const fs = CFG.factionSkills.find(f => f.faction === c.faction);
+    let passiveDesc = '';
+    if (fs && fs.passives) {
+      passiveDesc = fs.passives.map(p => `被动【${p.name}】: ${p.desc}`).join('<br>');
+    }
+    div.innerHTML = `
+      <div class="cname">${c.name}</div>
+      <div class="cdesc">HP${c.maxHp}/AP${c.maxAp}</div>
+      <div class="hover-tip">
+        <div class="tip-name">${c.name}</div>
+        <div class="tip-type">HP ${c.maxHp} · AP ${c.maxAp}</div>
+        <div class="tip-desc">${c.desc || ''}<br><br>${passiveDesc}</div>
+      </div>
+    `;
     div.onclick = () => {
       myCharId = c.id;
       charInfo.textContent = `${c.name} —— ${c.desc || ''}`;
@@ -403,13 +419,32 @@ function onPickCard(card) {
 function renderSkills(skills, canUse) {
   skillBar.innerHTML = '';
   skills.forEach(s => {
-    const tpl = byId(CFG.skills, s.id);
+    // 先从普通技能找, 再从阵营主动技能找
+    let tpl = byId(CFG.skills, s.id);
+    if (!tpl) {
+      for (const fs of CFG.factionSkills) {
+        if (!fs.actives) continue;
+        for (const a of fs.actives) {
+          if (a.id === s.id) { tpl = a; break; }
+        }
+        if (tpl) break;
+      }
+    }
     if (!tpl) return;
     const btn = document.createElement('button');
     btn.className = 'skill-btn' + (selectedSkill === s.id ? ' selected' : '');
     btn.textContent = `${tpl.name}(${tpl.cost}AP)`;
     btn.disabled = !canUse || s.currentCd > 0;
-    btn.title = s.currentCd > 0 ? `冷却 ${s.currentCd}` : tpl.desc;
+    // 悬浮窗
+    const tip = document.createElement('div');
+    tip.className = 'hover-tip';
+    tip.innerHTML = `
+      <div class="tip-name">${tpl.name}</div>
+      <div class="tip-type">消耗 ${tpl.cost} AP · 冷却 ${tpl.cooldown} 轮</div>
+      <div class="tip-desc">${tpl.desc || ''}</div>
+    `;
+    btn.style.position = 'relative';
+    btn.appendChild(tip);
     btn.onclick = () => onPickSkill(s, tpl);
     skillBar.appendChild(btn);
   });
@@ -494,6 +529,10 @@ confirmCancel.onclick = () => {
 
 // ---------- 结束按钮 ----------
 endMainBtn.onclick = () => socket.emit('endMainTurn');
+diceBtn.onclick = () => {
+  const roll = Math.floor(Math.random() * 20) + 1;
+  alert(`🎲 掷骰结果: ${roll}`);
+};
 endMinionBtn.onclick = () => {
   selectedMinion = null;
   socket.emit('endMinionTurn');

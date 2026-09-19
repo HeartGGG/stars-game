@@ -147,6 +147,110 @@ const SKILLS = [
 ];
 
 // =============================================================
+// 3.5 阵营技能配置 (每个阵营可以有任意多个被动 + 任意多个主动)
+//     被动在每个玩家主回合前自动结算
+//     主动技能所有该阵营角色都能用
+//     新增技能: 复制下面一段, 改 id 和数值即可
+// =============================================================
+const FACTION_SKILLS = [
+  {
+    faction: 'human',        // 对应 FACTIONS 里的 id
+    // ===== 被动技能数组 (想加几个加几个) =====
+    passives: [
+      {
+        id: 'human_vigor',
+        name: '人类韧性',
+        desc: '每轮开始自动回复2点生命',
+        onRoundStart: { heal: 2 }
+      },
+      // 复制这一段就能加第二个被动
+      {
+        id: 'human_courage',
+        name: '人类勇气',
+        desc: '每轮开始对敌方造成1点伤害',
+        onRoundStart: { damage: 1, target: 'enemies' }
+      }
+    ],
+    // ===== 主动技能数组 (想加几个加几个) =====
+    actives: [
+      {
+        id: 'human_rally',
+        name: '鼓舞士气',
+        cost: 1,
+        cooldown: 2,               // 单位: 轮
+        type: 'buff',
+        target: 'self',
+        value: 3,
+        desc: '本回合攻击+3',
+        roll: null
+      },
+      // 复制这一段就能加第二个主动
+      {
+        id: 'human_smite',
+        name: '神圣打击',
+        cost: 2,
+        cooldown: 2,
+        type: 'attack',
+        target: 'enemy',
+        value: 6,
+        desc: '造成6点伤害, 掷骰>=12则双倍',
+        roll: { min: 12, double: true }
+      }
+    ]
+  },
+
+  {
+    faction: 'demon',
+    passives: [
+      {
+        id: 'demon_bloodlust',
+        name: '恶魔嗜血',
+        desc: '每轮开始对敌方全体造成1点伤害',
+        onRoundStart: { damage: 1, target: 'enemies' }
+      }
+    ],
+    actives: [
+      {
+        id: 'demon_crush',
+        name: '恶魔粉碎',
+        cost: 2,
+        cooldown: 2,
+        type: 'attack',
+        target: 'enemy',
+        value: 5,
+        desc: '造成5点伤害, 掷骰>=15则双倍',
+        roll: { min: 15, double: true }
+      }
+    ]
+  },
+
+  {
+    faction: 'nature',
+    passives: [
+      {
+        id: 'nature_regrowth',
+        name: '自然再生',
+        desc: '每轮开始回复1点生命, 并对敌方造成1点伤害',
+        onRoundStart: { heal: 1, damage: 1, target: 'enemies' }
+      }
+    ],
+    actives: [
+      {
+        id: 'nature_thorns',
+        name: '荆棘护甲',
+        cost: 1,
+        cooldown: 2,
+        type: 'buff',
+        target: 'self',
+        value: 3,
+        desc: '获得3点护盾',
+        roll: null
+      }
+    ]
+  }
+];
+
+// =============================================================
 // 4. 仆从模板
 // =============================================================
 const MINION_TEMPLATES = [
@@ -228,7 +332,7 @@ const CARDS = [
 ];
 
 module.exports = {
-  FACTIONS, CHARACTERS, SKILLS, MINION_TEMPLATES,
+  FACTIONS, CHARACTERS, SKILLS, FACTION_SKILLS, MINION_TEMPLATES,
   EQUIPMENTS, ACCESSORIES, CARDS
 };
 //（注：内容由AI生成）

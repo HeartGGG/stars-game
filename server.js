@@ -7,7 +7,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const {
-  FACTIONS, CHARACTERS, SKILLS, MINION_TEMPLATES,
+  FACTIONS, CHARACTERS, SKILLS, FACTION_SKILLS, MINION_TEMPLATES,
   EQUIPMENTS, ACCESSORIES, CARDS
 } = require('./gameConfig');
 
@@ -156,7 +156,13 @@ function startGame(room) {
     p.drawPerTurn = tpl.drawPerTurn;
     p.hand = drawCards(tpl.startHandCount);
     p.effects = [];
-    p.skills = (tpl.skills || []).map(sid => ({ id: sid, currentCd: 0 }));
+    // 角色自带技能 + 阵营所有主动技能
+    const allSkillIds = [...(tpl.skills || [])];
+    const factionSkill = FACTION_SKILLS.find(f => f.faction === tpl.faction);
+    if (factionSkill && factionSkill.actives) {
+      factionSkill.actives.forEach(a => allSkillIds.push(a.id));
+    }
+    p.skills = allSkillIds.map(sid => ({ id: sid, currentCd: 0 }));
     p.equipment = [null, null, null].map(() => ({ id: null, accessories: [null, null] }));
     p.minions = [];
     p.alive = true;
@@ -213,6 +219,30 @@ function startNewTurn(roomId) {
 
     if (checkGameOver(roomId)) return;
 
+    // 阵营被动技能结算 (主回合前, 遍历所有被动)
+    alivePlayers(room).forEach(p => {
+      const charTpl = byId(CHARACTERS, p.charId);
+      const fs = FACTION_SKILLS.find(f => f.faction === charTpl.faction);
+      if (!fs || !fs.passives) return;
+      fs.passives.forEach(passive => {
+        if (!passive.onRoundStart) return;
+        const eff = passive.onRoundStart;
+        if (eff.heal) {
+          p.hp = Math.min(p.maxHp, p.hp + eff.heal);
+          broadcastLog(roomId, `${p.name} 的【${passive.name}】回复了 ${eff.heal} 点生命`);
+        }
+        if (eff.damage) {
+          alivePlayers(room).forEach(e => {
+            if (e.id === p.id) return;
+            e.hp = Math.max(0, e.hp - eff.damage);
+          });
+          broadcastLog(roomId, `${p.name} 的【${passive.name}】对敌方造成 ${eff.damage} 点伤害`);
+        }
+      });
+    });
+    room.players.forEach(p => { if (p.hp <= 0) p.alive = false; });
+    if (checkGameOver(roomId)) return;
+
     setTimeout(() => {
       room.phase = 'main';
       const cur = room.players[room.turn];
@@ -258,6 +288,7 @@ io.on('connection', (socket) => {
 
   socket.emit('config', {
     factions: FACTIONS, characters: CHARACTERS, skills: SKILLS,
+    factionSkills: FACTION_SKILLS,
     minionTemplates: MINION_TEMPLATES, equipments: EQUIPMENTS, accessories: ACCESSORIES
   });
   socket.emit('joined', { index: player.index, isHost: player.isHost });
@@ -405,10 +436,20 @@ io.on('connection', (socket) => {
       case 'attack': {
         const t = r.players[targetId];
         if (!t || !t.alive) return;
-        const dmg = (tpl.value || 0) + bonus.attack;
+        let dmg = (tpl.value || 0) + bonus.attack;
+        // 掷骰判断
+        let rollText = '';
+        if (tpl.roll) {
+          const roll = Math.floor(Math.random() * 20) + 1; // 1-20
+          rollText = ` (掷骰: ${roll})`;
+          if (roll >= tpl.roll.min) {
+            if (tpl.roll.double) dmg *= 2;
+            rollText += ' ✨触发额外效果!';
+          }
+        }
         t.hp = Math.max(0, t.hp - dmg);
         t.alive = t.hp > 0;
-        log = `${self.name} 释放技能【${tpl.name}】, 对 ${t.name} 造成 ${dmg} 点伤害`;
+        log = `${self.name} 释放技能【${tpl.name}】, 对 ${t.name} 造成 ${dmg} 点伤害${rollText}`;
         break;
       }
       case 'heal':
