@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>联机卡牌对战</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 右侧装备栏 -->
+  <div class="right-panel">
+    <h3>我的装备</h3>
+    <div class="equip-list" id="equipList"></div>
+  </div>
+
+  <!-- 战斗区域 -->
+  <div class="battle-area">
+    <div class="enemy-wrap">
+      <div class="enemy-panel" id="enemyPanel">
+        <div class="enemy-info" id="enemyInfo">
+          <div class="enemy-name" id="enemyName">等待对手...</div>
+          <div class="enemy-hp">血量: <span id="enemyHp">--</span></div>
+          <div class="enemy-effects" id="enemyEffects"></div>
+        </div>
+        <div class="enemy-minions" id="enemyMinions"></div>
+        <!-- 对手装备悬浮窗 -->
+        <div class="equip-tooltip" id="enemyEquipTip"></div>
+      </div>
+    </div>
+
+    <div class="log-area" id="logArea">
+      <div class="phase-tip" id="phaseTip">等待匹配...</div>
+    </div>
+  </div>
+
+  <!-- 底部玩家栏 -->
+  <div class="player-bar">
+    <div class="player-info">
+      <div class="player-name" id="playerName">--</div>
+      <div class="player-stats">
+        <span>血量: <b id="playerHp">--</b>/<span id="playerMaxHp">--</span></span>
+        <span>行动点: <b id="playerAp">--</b>/<span id="playerMaxAp">--</span></span>
+      </div>
+      <div class="skill-bar" id="skillBar"></div>
+      <div class="player-effects" id="playerEffects"></div>
+      <div class="player-minions" id="playerMinions"></div>
+    </div>
+
+    <div class="hand-area" id="handArea"></div>
+    <div class="turn-btns">
+      <button class="end-btn" id="endMainBtn">结束主回合</button>
+      <button class="end-btn" id="endMinionBtn">结束仆从回合</button>
+    </div>
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
+<!-- （注：内容由AI生成） -->
