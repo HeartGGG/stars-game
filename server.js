@@ -441,34 +441,44 @@ io.on('connection', (socket) => {
     self.ap -= tpl.cost;
     data.currentCd = tpl.cooldown;
 
+    // 掷骰判定 (所有技能类型通用)
+    let rollResult = null;
+    let multiplier = 1;
+    if (tpl.roll) {
+      rollResult = Math.floor(Math.random() * 20) + 1;
+      if (rollResult >= tpl.roll.min) {
+        multiplier = tpl.roll.double ? 2 : (tpl.roll.multiplier || 2);
+      }
+      broadcast(r.id, 'diceResult', {
+        player: self.name,
+        skill: tpl.name,
+        roll: rollResult,
+        min: tpl.roll.min,
+        success: rollResult >= tpl.roll.min
+      });
+    }
+
     let log = '';
     const bonus = calcBonus(self);
+    const effVal = (tpl.value || 0) * multiplier;
+    const rollSuffix = rollResult ? ` (掷骰 ${rollResult}${multiplier > 1 ? ' ✨双倍!' : ''})` : '';
     switch (tpl.type) {
       case 'attack': {
         const t = r.players[targetId];
         if (!t || !t.alive) return;
-        let dmg = (tpl.value || 0) + bonus.attack;
-        let rollText = '';
-        if (tpl.roll) {
-          const roll = Math.floor(Math.random() * 20) + 1;
-          rollText = ` (掷骰: ${roll})`;
-          if (roll >= tpl.roll.min) {
-            if (tpl.roll.double) dmg *= 2;
-            rollText += ' ✨触发额外效果!';
-          }
-        }
+        const dmg = effVal + bonus.attack;
         t.hp = Math.max(0, t.hp - dmg);
         t.alive = t.hp > 0;
-        log = `${self.name} 释放技能【${tpl.name}】, 对 ${t.name} 造成 ${dmg} 点伤害${rollText}`;
+        log = `${self.name} 释放技能【${tpl.name}】, 对 ${t.name} 造成 ${dmg} 点伤害${rollSuffix}`;
         break;
       }
       case 'heal':
-        self.hp = Math.min(self.maxHp, self.hp + (tpl.value || 0));
-        log = `${self.name} 释放技能【${tpl.name}】, 回复 ${tpl.value} 点生命`;
+        self.hp = Math.min(self.maxHp, self.hp + effVal);
+        log = `${self.name} 释放技能【${tpl.name}】, 回复 ${effVal} 点生命${rollSuffix}`;
         break;
       case 'buff':
-        self.tempAttack = (self.tempAttack || 0) + (tpl.value || 0);
-        log = `${self.name} 释放技能【${tpl.name}】, 本回合攻击+${tpl.value}`;
+        self.tempAttack = (self.tempAttack || 0) + effVal;
+        log = `${self.name} 释放技能【${tpl.name}】, 本回合攻击+${effVal}${rollSuffix}`;
         break;
       case 'summon': {
         const mtpl = byId(MINION_TEMPLATES, tpl.minionId);

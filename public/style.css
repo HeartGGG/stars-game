@@ -94,6 +94,35 @@ html, body { height: 100%; overflow: hidden; background: #1a1a2e; color: #fff; }
   100% { opacity: 0; transform: scale(1.05); }
 }
 
+/* 骰子结果弹窗 */
+.dice-popup {
+  position: fixed; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  background: #1a1a2e;
+  border: 2px solid #feca57;
+  border-radius: 16px;
+  padding: 24px 48px;
+  z-index: 100; text-align: center;
+  box-shadow: 0 0 40px rgba(254,202,87,0.5);
+  animation: dicePop 2s ease-out forwards;
+}
+.dice-popup-title { font-size: 16px; color: #aaa; margin-bottom: 8px; }
+.dice-popup-num {
+  font-size: 72px; font-weight: 900; color: #feca57;
+  text-shadow: 0 0 20px rgba(254,202,87,0.8);
+  margin-bottom: 8px;
+}
+.dice-popup-num.success { color: #2ecc71; text-shadow: 0 0 20px rgba(46,204,113,0.8); }
+.dice-popup-num.fail { color: #e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.8); }
+.dice-popup-info { font-size: 14px; color: #ddd; }
+@keyframes dicePop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+  25%  { transform: translate(-50%, -50%) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
+}
+
 /* ========== 右侧装备栏 ========== */
 .right-panel {
   position: fixed; right: 0; top: 0; width: 180px; height: 75vh;

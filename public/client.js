@@ -34,8 +34,7 @@ const roomPlayers = $('roomPlayers');
 const playerCount = $('playerCount');
 const maxCount = $('maxCount');
 
-const danhakuLayer = $('danhakuLayer');
-const playersGrid = $('playersGrid');
+const danhakuLayer = $('danhakuLayer');const playersGrid = $('playersGrid');
 
 const playerName = $('playerName');
 const playerHp = $('playerHp');
@@ -87,6 +86,20 @@ function showDanhaku(text, duration = 2000) {
   el.textContent = text;
   danhakuLayer.appendChild(el);
   setTimeout(() => el.remove(), duration);
+}
+function showDicePopup(d) {
+  const popup = $('dicePopup');
+  const numEl = $('diceNum');
+  const infoEl = $('diceInfo');
+  numEl.textContent = d.roll;
+  numEl.className = 'dice-popup-num ' + (d.success ? 'success' : 'fail');
+  infoEl.textContent = `${d.player} 的【${d.skill}】· 需要 >= ${d.min} · ${d.success ? '成功! ✨' : '未达成'}`;
+  popup.style.display = 'block';
+  // 重新触发动画
+  popup.style.animation = 'none';
+  popup.offsetHeight; // 强制重绘
+  popup.style.animation = '';
+  setTimeout(() => { popup.style.display = 'none'; }, 2000);
 }
 function appendLog(text) {
   const div = document.createElement('div');
@@ -540,6 +553,7 @@ endMinionBtn.onclick = () => {
 
 // ---------- 事件 ----------
 socket.on('danhaku', d => showDanhaku(d.text, d.duration));
+socket.on('diceResult', d => showDicePopup(d));
 socket.on('actionLog', d => appendLog(d.message));
 socket.on('joined', d => { myIndex = d.index; myIsHost = d.isHost; });
 socket.on('errorMsg', e => alert(e.message));
