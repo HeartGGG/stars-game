@@ -188,20 +188,33 @@ html, body { height: 100%; overflow: hidden; background: #1a1a2e; color: #fff; }
 
 /* 悬浮窗 */
 .player-card .equip-tooltip {
-  position: absolute; left: 50%; top: 100%;
-  transform: translateX(-50%);
-  width: 220px; background: #0f0f1e;
-  border: 1px solid #48dbfb; border-radius: 6px;
-  padding: 10px; font-size: 12px;
-  display: none; z-index: 100;
-  text-align: left;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  display: none; /* 隐藏旧的内部悬浮窗, 用全局的 */
 }
-.player-card:hover .equip-tooltip { display: block; }
 .equip-tooltip .t-title { color: #feca57; font-weight: bold; margin-bottom: 6px; }
 .equip-tooltip .t-eq { margin-top: 6px; }
 .equip-tooltip .t-eqname { color: #48dbfb; }
 .equip-tooltip .t-edesc { color: #aaa; font-size: 11px; margin-left: 8px; }
+
+/* 全局装备悬浮窗 (fixed定位, 不会被overflow裁掉) */
+.global-equip-tip {
+  position: fixed;
+  width: 240px;
+  background: #0f0f1e;
+  border: 1px solid #48dbfb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  z-index: 999;
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+  pointer-events: none;
+}
+.global-equip-tip .t-title { color: #feca57; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+.global-equip-tip .t-eq { margin-top: 6px; padding: 4px; background: rgba(255,255,255,0.05); border-radius: 4px; }
+.global-equip-tip .t-eqname { color: #48dbfb; font-weight: bold; }
+.global-equip-tip .t-edesc { color: #aaa; font-size: 11px; margin: 2px 0 0 8px; }
+.global-equip-tip .t-acc { color: #feca57; font-size: 11px; margin-left: 16px; }
+.global-equip-tip .t-empty { color: #666; font-style: italic; }
 
 /* 日志 */
 .log-area {

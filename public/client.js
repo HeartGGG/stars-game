@@ -11,6 +11,7 @@ let CFG = {
 };
 
 let myIndex = -1;
+let roomState = null;
 let myIsHost = false;
 let myCharId = null;
 let selectedCard = null;
@@ -70,6 +71,7 @@ const forceCloseBtn = $('forceCloseBtn');
 const equipSlotModal = $('equipSlotModal');
 const equipSlotList = $('equipSlotList');
 const equipSlotCancel = $('equipSlotCancel');
+const globalEquipTip = $('globalEquipTip');
 
 // 启动时强制隐藏所有弹窗
 confirmModal.style.display = 'none';
@@ -175,6 +177,7 @@ lobbyStartBtn.addEventListener('click', () => socket.emit('lobbyStartSelect'));
 
 // ---------- 状态渲染 ----------
 socket.on('state', (room) => {
+  roomState = room;  // 存到全局，供其他函数用
   const me = room.players[myIndex];
   if (!me) return;
 
@@ -348,8 +351,45 @@ function renderOtherPlayers(room) {
       };
     });
 
+    // 鼠标悬浮显示全局装备悬浮窗
+    card.onmouseenter = (e) => {
+      showGlobalEquipTip(p, e.clientX, e.clientY);
+    };
+    card.onmouseleave = () => {
+      globalEquipTip.style.display = 'none';
+    };
+
     playersGrid.appendChild(card);
   });
+}
+
+function showGlobalEquipTip(player, x, y) {
+  let html = `<div class="t-title">${player.name} 的装备</div>`;
+  let has = false;
+  player.equipment.forEach(eq => {
+    if (!eq.id) return;
+    has = true;
+    const tpl = byId(CFG.equipments, eq.id);
+    html += `<div class="t-eq"><div class="t-eqname">${tpl.name}</div><div class="t-edesc">${tpl.desc || ''}</div>`;
+    eq.accessories.forEach(acc => {
+      if (acc) {
+        const aTpl = byId(CFG.accessories, acc.id);
+        html += `<div class="t-acc">└ 配件: ${aTpl ? aTpl.name : acc.id}</div>`;
+      }
+    });
+    html += `</div>`;
+  });
+  if (!has) html += '<div class="t-empty">暂无装备</div>';
+  globalEquipTip.innerHTML = html;
+  globalEquipTip.style.display = 'block';
+  // 定位: 鼠标右侧偏下, 避免超出屏幕
+  const tipW = 260, tipH = 200;
+  let left = x + 15;
+  let top = y + 15;
+  if (left + tipW > window.innerWidth) left = x - tipW - 15;
+  if (top + tipH > window.innerHeight) top = y - tipH - 15;
+  globalEquipTip.style.left = left + 'px';
+  globalEquipTip.style.top = top + 'px';
 }
 function renderEquipTip(equipment) {
   let html = '<div class="t-title">装备</div>';
@@ -428,7 +468,7 @@ function onPickCard(card) {
 
   // 配件卡牌: 选择镶嵌到哪件装备
   if (card.type === 'accessory') {
-    const me = state.players[myIndex];
+    const me = roomState.players[myIndex];
     const equippedSlots = me.equipment
       .map((eq, i) => ({ eq, i }))
       .filter(x => x.eq.id && x.eq.accessories.some(a => !a)); // 有装备且配件槽有空位
