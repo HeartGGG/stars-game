@@ -193,10 +193,8 @@ socket.on('state', (room) => {
     renderLobbyPlayers(room);
     lobbyStartBtn.style.display = myIsHost ? 'block' : 'none';
     if (myIsHost) {
-      lobbyStartBtn.disabled = room.players.length < room.minPlayers;
-      lobbyHint.textContent = room.players.length >= room.minPlayers
-        ? '人数足够, 点击开始选角!'
-        : `等待玩家加入 (${room.players.length}/${room.minPlayers})`;
+      lobbyStartBtn.disabled = false; // 房主随时可以开始选角, 方便单人测试
+      lobbyHint.textContent = '点击开始选角!';
     } else {
       lobbyHint.textContent = '等待房主开始选角…';
     }

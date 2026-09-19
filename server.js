@@ -327,8 +327,6 @@ io.on('connection', (socket) => {
     broadcastLog(r.id, '--- 进入选角阶段 ---');
     broadcast(r.id, 'state', snapshot(r));
   });
-
-  // 房主开始游戏
   socket.on('hostStart', () => {
     const r = rooms[socket.data.roomId];
     if (!r || r.phase !== 'select') return;
