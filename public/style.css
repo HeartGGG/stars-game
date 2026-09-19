@@ -188,12 +188,14 @@ html, body { height: 100%; overflow: hidden; background: #1a1a2e; color: #fff; }
 
 /* 悬浮窗 */
 .player-card .equip-tooltip {
-  position: absolute; left: 105%; top: 0;
-  width: 200px; background: #0f0f1e;
+  position: absolute; left: 50%; top: 100%;
+  transform: translateX(-50%);
+  width: 220px; background: #0f0f1e;
   border: 1px solid #48dbfb; border-radius: 6px;
   padding: 10px; font-size: 12px;
-  display: none; z-index: 10;
+  display: none; z-index: 100;
   text-align: left;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
 .player-card:hover .equip-tooltip { display: block; }
 .equip-tooltip .t-title { color: #feca57; font-weight: bold; margin-bottom: 6px; }

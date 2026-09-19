@@ -345,7 +345,7 @@ io.on('connection', (socket) => {
   });
 
   // 出牌
-  socket.on('playCard', ({ cardUid, targetType, targetId }) => {
+  socket.on('playCard', ({ cardUid, targetType, targetId, equipmentSlot }) => {
     const r = rooms[socket.data.roomId];
     if (!r || r.phase !== 'main' || r.turn !== socket.data.index) return;
     const self = r.players[socket.data.index];
@@ -404,14 +404,29 @@ io.on('connection', (socket) => {
         break;
       }
       case 'accessory': {
-        for (let eq of self.equipment) {
-          if (!eq.id) continue;
-          const accSlot = eq.accessories.findIndex(a => !a);
-          if (accSlot !== -1) {
-            eq.accessories[accSlot] = { id: card.accessoryId };
-            self.maxHp = byId(CHARACTERS, self.charId).maxHp + calcBonus(self).maxHp;
-            log = `${self.name} 镶嵌配件【${byId(ACCESSORIES, card.accessoryId).name}】`;
-            break;
+        // 指定装备槽位，装到对应装备上
+        if (equipmentSlot !== undefined && equipmentSlot !== null) {
+          const eq = self.equipment[equipmentSlot];
+          if (eq && eq.id) {
+            const accSlot = eq.accessories.findIndex(a => !a);
+            if (accSlot !== -1) {
+              eq.accessories[accSlot] = { id: card.accessoryId };
+              self.maxHp = byId(CHARACTERS, self.charId).maxHp + calcBonus(self).maxHp;
+              log = `${self.name} 在【${byId(EQUIPMENTS, eq.id).name}】上镶嵌配件【${byId(ACCESSORIES, card.accessoryId).name}】`;
+            }
+          }
+        } else {
+          // 没指定槽位，自动找第一个有空位的
+          for (let i = 0; i < self.equipment.length; i++) {
+            const eq = self.equipment[i];
+            if (!eq.id) continue;
+            const accSlot = eq.accessories.findIndex(a => !a);
+            if (accSlot !== -1) {
+              eq.accessories[accSlot] = { id: card.accessoryId };
+              self.maxHp = byId(CHARACTERS, self.charId).maxHp + calcBonus(self).maxHp;
+              log = `${self.name} 镶嵌配件【${byId(ACCESSORIES, card.accessoryId).name}】`;
+              break;
+            }
           }
         }
         break;

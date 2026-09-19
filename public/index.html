@@ -119,7 +119,16 @@
     </div>
   </div>
 
-  <!-- ============ 胜利大弹窗 ============ -->
+  <!-- ============ 选择装备槽弹窗 (配件用) ============ -->
+  <div class="modal-overlay" id="equipSlotModal" style="display:none">
+    <div class="modal-box">
+      <h3>选择要镶嵌配件的装备</h3>
+      <div id="equipSlotList" style="margin: 12px 0; max-height: 200px; overflow-y: auto;"></div>
+      <div class="modal-btns">
+        <button class="cancel" id="equipSlotCancel">取消</button>
+      </div>
+    </div>
+  </div>
   <div class="modal-overlay big" id="gameOverModal" style="display:none">
     <div class="modal-box victory">
       <h1 id="victoryText">🏆 胜利!</h1>

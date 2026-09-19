@@ -67,10 +67,14 @@ const gameOverModal = $('gameOverModal');
 const victoryText = $('victoryText');
 const restartBtn = $('restartBtn');
 const forceCloseBtn = $('forceCloseBtn');
+const equipSlotModal = $('equipSlotModal');
+const equipSlotList = $('equipSlotList');
+const equipSlotCancel = $('equipSlotCancel');
 
 // 启动时强制隐藏所有弹窗
 confirmModal.style.display = 'none';
 gameOverModal.style.display = 'none';
+equipSlotModal.style.display = 'none';
 
 // 强制关闭按钮: 不管游戏状态, 直接关掉弹窗
 forceCloseBtn.onclick = () => {
@@ -421,6 +425,40 @@ function onPickCard(card) {
   selectedCard = card;
   document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
+
+  // 配件卡牌: 选择镶嵌到哪件装备
+  if (card.type === 'accessory') {
+    const me = state.players[myIndex];
+    const equippedSlots = me.equipment
+      .map((eq, i) => ({ eq, i }))
+      .filter(x => x.eq.id && x.eq.accessories.some(a => !a)); // 有装备且配件槽有空位
+
+    if (equippedSlots.length === 0) {
+      alert('没有已装备的装备可以镶嵌配件');
+      resetTarget();
+      return;
+    }
+
+    // 列出可选的装备
+    equipSlotList.innerHTML = '';
+    equippedSlots.forEach(({ eq, i }) => {
+      const tpl = byId(CFG.equipments, eq.id);
+      const btn = document.createElement('button');
+      btn.style.cssText = 'display:block;width:100%;margin:4px 0;padding:8px;background:#2a2a4a;border:1px solid #48dbfb;border-radius:6px;color:#fff;cursor:pointer;text-align:left;';
+      btn.textContent = `装备槽 ${i + 1}: ${tpl ? tpl.name : eq.id}`;
+      btn.onclick = () => {
+        equipSlotModal.style.display = 'none';
+        askConfirm(`镶嵌配件【${card.name}】到【${tpl ? tpl.name : ''}】`, card.desc, () => {
+          socket.emit('playCard', { cardUid: card.uid, targetType: 'self', targetId: null, equipmentSlot: i });
+          resetTarget();
+        });
+      };
+      equipSlotList.appendChild(btn);
+    });
+    equipSlotModal.style.display = 'flex';
+    return;
+  }
+
   if (card.target === 'self') {
     askConfirm(`使用【${card.name}】`, card.desc, () => {
       socket.emit('playCard', { cardUid: card.uid, targetType: 'self', targetId: null });
@@ -537,6 +575,10 @@ confirmOk.onclick = () => {
 confirmCancel.onclick = () => {
   confirmModal.style.display = 'none';
   confirmCb = null;
+  resetTarget();
+};
+equipSlotCancel.onclick = () => {
+  equipSlotModal.style.display = 'none';
   resetTarget();
 };
 
