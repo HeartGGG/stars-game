@@ -191,6 +191,11 @@ function startNewTurn(roomId) {
     }
     room.envEffects = room.envEffects.filter(e => e.duration > 0);
     room.roundCounter = 0;
+
+    // 所有玩家行动完一轮后, 全场技能冷却 -1 (按轮计算)
+    alivePlayers(room).forEach(p => {
+      p.skills.forEach(s => { if (s.currentCd > 0) s.currentCd--; });
+    });
   }
 
   // 个人持续伤害
@@ -215,7 +220,6 @@ function startNewTurn(roomId) {
       cur.ap = cur.maxAp + bonus.ap;
       cur.maxHp = byId(CHARACTERS, cur.charId).maxHp + calcBonus(cur).maxHp;
       cur.hand.push(...drawCards(cur.drawPerTurn));
-      cur.skills.forEach(s => { if (s.currentCd > 0) s.currentCd--; });
       broadcast(roomId, 'state', snapshot(room));
       broadcastLog(roomId, `--- ${cur.name} 的回合 ---`);
       broadcast(roomId, 'danhaku', { text: `${cur.name} 的回合!`, duration: 2000 });

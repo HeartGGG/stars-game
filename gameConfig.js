@@ -86,7 +86,7 @@ const SKILLS = [
     id: 'warrior_slash',
     name: '猛力斩击',
     cost: 2,
-    cooldown: 2,
+    cooldown: 2,            // 冷却单位: 大回合(轮), 即所有玩家都行动过一次算一轮
     type: 'attack',         // attack / heal / summon / buff
     target: 'enemy',        // enemy / self / enemy_minion
     value: 8,
