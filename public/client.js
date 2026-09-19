@@ -155,7 +155,7 @@ socket.on('state', (room) => {
     selectPanel.style.display = 'none';
     gameOverModal.style.display = 'none';
     renderLobbyPlayers(room);
-    lobbyStartBtn.hidden = !myIsHost;
+    lobbyStartBtn.style.display = myIsHost ? 'block' : 'none';
     if (myIsHost) {
       lobbyStartBtn.disabled = room.players.length < room.minPlayers;
       lobbyHint.textContent = room.players.length >= room.minPlayers
@@ -174,7 +174,7 @@ socket.on('state', (room) => {
     selectPanel.style.display = 'block';
     gameOverModal.style.display = 'none';
     renderRoomPlayers(room);
-    hostStartBtn.hidden = !myIsHost;
+    hostStartBtn.style.display = myIsHost ? 'block' : 'none';
     if (myIsHost) {
       const enough = room.players.length >= room.minPlayers;
       const allReady = room.players.every(p => p.charId && p.ready);
