@@ -54,6 +54,7 @@ function calcBonus(player) {
       }
     });
   });
+  b.attack += player.tempAttack || 0;  // buff 技能的临时攻击加成
   return b;
 }
 
@@ -219,27 +220,29 @@ function startNewTurn(roomId) {
 
     if (checkGameOver(roomId)) return;
 
-    // 阵营被动技能结算 (主回合前, 遍历所有被动)
-    alivePlayers(room).forEach(p => {
-      const charTpl = byId(CHARACTERS, p.charId);
+    // 阵营被动技能结算: 只结算当前回合玩家的被动
+    const curPlayer = room.players[room.turn];
+    if (curPlayer && curPlayer.alive) {
+      const charTpl = byId(CHARACTERS, curPlayer.charId);
       const fs = FACTION_SKILLS.find(f => f.faction === charTpl.faction);
-      if (!fs || !fs.passives) return;
-      fs.passives.forEach(passive => {
-        if (!passive.onRoundStart) return;
-        const eff = passive.onRoundStart;
-        if (eff.heal) {
-          p.hp = Math.min(p.maxHp, p.hp + eff.heal);
-          broadcastLog(roomId, `${p.name} 的【${passive.name}】回复了 ${eff.heal} 点生命`);
-        }
-        if (eff.damage) {
-          alivePlayers(room).forEach(e => {
-            if (e.id === p.id) return;
-            e.hp = Math.max(0, e.hp - eff.damage);
-          });
-          broadcastLog(roomId, `${p.name} 的【${passive.name}】对敌方造成 ${eff.damage} 点伤害`);
-        }
-      });
-    });
+      if (fs && fs.passives) {
+        fs.passives.forEach(passive => {
+          if (!passive.onRoundStart) return;
+          const eff = passive.onRoundStart;
+          if (eff.heal) {
+            curPlayer.hp = Math.min(curPlayer.maxHp, curPlayer.hp + eff.heal);
+            broadcastLog(roomId, `${curPlayer.name} 的【${passive.name}】回复了 ${eff.heal} 点生命`);
+          }
+          if (eff.damage) {
+            alivePlayers(room).forEach(e => {
+              if (e.id === curPlayer.id) return;
+              e.hp = Math.max(0, e.hp - eff.damage);
+            });
+            broadcastLog(roomId, `${curPlayer.name} 的【${passive.name}】对敌方造成 ${eff.damage} 点伤害`);
+          }
+        });
+      }
+    }
     room.players.forEach(p => { if (p.hp <= 0) p.alive = false; });
     if (checkGameOver(roomId)) return;
 
@@ -425,7 +428,15 @@ io.on('connection', (socket) => {
     if (!r || r.phase !== 'main' || r.turn !== socket.data.index) return;
     const self = r.players[socket.data.index];
     const data = self.skills.find(s => s.id === skillId);
-    const tpl = byId(SKILLS, skillId);
+    // 找模板: 先从普通技能找, 再从阵营主动技能找
+    let tpl = byId(SKILLS, skillId);
+    if (!tpl) {
+      for (const fs of FACTION_SKILLS) {
+        if (!fs.actives) continue;
+        tpl = fs.actives.find(a => a.id === skillId);
+        if (tpl) break;
+      }
+    }
     if (!data || !tpl || data.currentCd > 0 || self.ap < tpl.cost) return;
     self.ap -= tpl.cost;
     data.currentCd = tpl.cooldown;
@@ -437,10 +448,9 @@ io.on('connection', (socket) => {
         const t = r.players[targetId];
         if (!t || !t.alive) return;
         let dmg = (tpl.value || 0) + bonus.attack;
-        // 掷骰判断
         let rollText = '';
         if (tpl.roll) {
-          const roll = Math.floor(Math.random() * 20) + 1; // 1-20
+          const roll = Math.floor(Math.random() * 20) + 1;
           rollText = ` (掷骰: ${roll})`;
           if (roll >= tpl.roll.min) {
             if (tpl.roll.double) dmg *= 2;
@@ -455,6 +465,10 @@ io.on('connection', (socket) => {
       case 'heal':
         self.hp = Math.min(self.maxHp, self.hp + (tpl.value || 0));
         log = `${self.name} 释放技能【${tpl.name}】, 回复 ${tpl.value} 点生命`;
+        break;
+      case 'buff':
+        self.tempAttack = (self.tempAttack || 0) + (tpl.value || 0);
+        log = `${self.name} 释放技能【${tpl.name}】, 本回合攻击+${tpl.value}`;
         break;
       case 'summon': {
         const mtpl = byId(MINION_TEMPLATES, tpl.minionId);
@@ -517,6 +531,7 @@ io.on('connection', (socket) => {
     if (!r || r.phase !== 'minion' || r.turn !== socket.data.index) return;
     const self = r.players[socket.data.index];
     self.minions.forEach(m => m.hasAttacked = false);
+    self.tempAttack = 0;  // 回合结束清除临时攻击加成
     broadcastLog(r.id, `${self.name} 仆从行动结束`);
     r.roundCounter++;
     r.turn = nextAliveIndex(r, r.turn);
